@@ -1,0 +1,8 @@
+work/
+*.wlf
+transcript
+vsim.wlf
+*.vstf
+*.log
+modelsim.ini
+covhtmldata/
