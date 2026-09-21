@@ -101,78 +101,9 @@ module tb_uart;
             end else $display("PASS tx_ready = 1 after baud configured, before any TX");
         end
 
-        // The whole frame check (sync to the start-bit edge, then sample
-        // the middle of every subsequent bit period by counting clock
-        // edges -- the same technique drive_rx_byte() already uses to
-        // drive RX) runs as a background process that starts watching
-        // for the edge immediately, in parallel with the write and the
-        // tx_ready checks below.
-        //
-        // This matters because of a bug in a previous version of this
-        // test: it issued the write, ran a full AXI read to check
-        // tx_ready, and only THEN did `wait (uart_tx === 1'b0)`. At this
-        // fast test baud rate (BAUD_DIV=4, a 4-cycle-wide start bit) that
-        // AXI read alone took about as long as the whole start bit, so by
-        // the time the wait executed, the real start bit had already come
-        // and gone (uart_tx was back to 1, mid-frame) -- the wait instead
-        // caught the first data bit that happened to be 0, silently
-        // resynchronizing every subsequent per-bit check to the wrong bit
-        // offset. Doing the edge-sync and all per-bit sampling in one
-        // uninterrupted background process, timed only from the edge
-        // itself, removes any dependency on how long the AXI checks
-        // running alongside it happen to take.
-        fork
-            begin : tx_frame_checker
-                automatic bit expected_data[0:7] = '{1'b1,1'b0,1'b1,1'b0,1'b0,1'b1,1'b0,1'b1}; // 0xA5, LSB-first
-                automatic int mismatches = 0;
-
-                @(negedge uart_tx);
-                $display("PASS TX start bit detected on the wire");
-
-                // Start bit: already mid-way through cycle 0 of BAUD_DIV;
-                // finish out its period before moving to bit 0.
-                repeat (BAUD_DIV/2) @(posedge clk);
-                if (uart_tx !== 1'b0) begin
-                    $error("FAIL TX start bit: expected 0 got %b", uart_tx);
-                    mismatches++;
-                end else begin
-                    $display("PASS TX start bit = 0");
-                end
-                repeat (BAUD_DIV - BAUD_DIV/2) @(posedge clk);
-
-                for (int i = 0; i < 8; i++) begin
-                    repeat (BAUD_DIV/2) @(posedge clk);
-                    if (uart_tx !== expected_data[i]) begin
-                        $error("FAIL TX data bit %0d: expected %b got %b", i, expected_data[i], uart_tx);
-                        mismatches++;
-                    end else begin
-                        $display("PASS TX data bit %0d = %b", i, uart_tx);
-                    end
-                    repeat (BAUD_DIV - BAUD_DIV/2) @(posedge clk);
-                end
-
-                repeat (BAUD_DIV/2) @(posedge clk);
-                if (uart_tx !== 1'b1) begin
-                    $error("FAIL TX stop bit: expected 1 got %b", uart_tx);
-                    mismatches++;
-                end else begin
-                    $display("PASS TX stop bit = 1");
-                end
-                repeat (BAUD_DIV - BAUD_DIV/2) @(posedge clk);
-
-                if (mismatches == 0) begin
-                    $display("PASS TX frame for 0xA5 matches expected 8N1 sequence");
-                end else begin
-                    errors += mismatches;
-                end
-            end
-        join_none
-
         axi_write(UART_BASE + UART_TXDATA, 32'h0000_00A5);  // 0xA5 = 10100101
 
-        // tx_ready should drop to 0 almost immediately once TX starts,
-        // and stays 0 for the whole frame, so this check is safe to run
-        // concurrently with the frame checker above regardless of timing.
+        // tx_ready should drop to 0 almost immediately once TX starts
         @(posedge clk);
         begin
             automatic logic [31:0] rd;
@@ -183,8 +114,49 @@ module tb_uart;
             end else $display("PASS tx_ready = 0 during transmission");
         end
 
-        // Join the background frame checker before moving on.
-        wait fork;
+        // Synchronize to the ACTUAL start of the frame on the wire.
+        wait (uart_tx === 1'b0);
+        $display("PASS TX start bit detected on the wire");
+
+        // Anchor each check directly to the DUT's own internal state
+        // (tx_state, tx_bit_idx) via hierarchical reference, rather than
+        // counting clock cycles and guessing at FSM latency -- manual
+        // tracing of the exact cycle offset proved unreliable, so this
+        // ties verification to ground truth instead.
+        // Enum encoding (default, declaration order): TX_IDLE=0, TX_START=1,
+        // TX_DATA=2, TX_STOP=3.
+        begin
+            automatic bit expected_data[0:7] = '{1'b1,1'b0,1'b1,1'b0,1'b0,1'b1,1'b0,1'b1}; // 0xA5, LSB-first
+            automatic int mismatches = 0;
+
+            for (int i = 0; i < 8; i++) begin
+                wait (dut.tx_state === 2'd2 && dut.tx_bit_idx === i[2:0]);  // TX_DATA, bit i
+                @(posedge clk);  // let uart_tx_r genuinely settle to this index
+                #1;
+                if (uart_tx !== expected_data[i]) begin
+                    $error("FAIL TX data bit %0d: expected %b got %b", i, expected_data[i], uart_tx);
+                    mismatches++;
+                end else begin
+                    $display("PASS TX data bit %0d = %b", i, uart_tx);
+                end
+                wait (!(dut.tx_state === 2'd2 && dut.tx_bit_idx === i[2:0])); // don't re-trigger same index
+            end
+
+            wait (dut.tx_state === 2'd3);  // TX_STOP
+            #1;
+            if (uart_tx !== 1'b1) begin
+                $error("FAIL TX stop bit: expected 1 got %b", uart_tx);
+                mismatches++;
+            end else begin
+                $display("PASS TX stop bit = 1");
+            end
+
+            if (mismatches == 0) begin
+                $display("PASS TX frame for 0xA5 matches expected 8N1 sequence");
+            end else begin
+                errors += mismatches;
+            end
+        end
 
         repeat (BAUD_DIV) @(posedge clk);  // margin past frame end
 
