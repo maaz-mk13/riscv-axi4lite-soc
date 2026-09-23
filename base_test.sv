@@ -40,6 +40,13 @@ class base_test extends uvm_test;
         wr_seq.addr = UART_BASE + UART_CTRL; wr_seq.data = 32'd8;
         wr_seq.start(env.agent.sequencer);
 
+        // Directed: guarantee the invalid/unmapped region gets covered
+        // (write + read) -- random weighting alone left this bin empty
+        // in an earlier run, so it's forced here rather than hoped for.
+        wr_seq = axi_write_read_seq::type_id::create("wr_seq");
+        wr_seq.addr = 32'h2000_0000; wr_seq.data = 32'hDEAD_DEAD;
+        wr_seq.start(env.agent.sequencer);
+
         rand_seq = axi_random_seq::type_id::create("rand_seq");
         rand_seq.num_transactions = 30;
         rand_seq.start(env.agent.sequencer);

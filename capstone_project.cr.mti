@@ -1,0 +1,261 @@
+F:/capstone_project/riscv-axi4lite-soc/tb_uvm_top.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_uvm_top.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+** Note: (vlog-2286) F:/capstone_project/riscv-axi4lite-soc/tb_uvm_top.sv(8): Using implicit +incdir+C:/questasim64_2024.1/uvm-1.1d/../verilog_src/uvm-1.1d/src from import uvm_pkg
+-- Compiling package tb_uvm_top_sv_unit
+-- Importing package mtiUvm.uvm_pkg (uvm-1.1d Built-in)
+-- Importing package soc_pkg
+-- Importing package axi_test_pkg
+-- Compiling module tb_uvm_top
+
+Top level modules:
+	tb_uvm_top
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/core_to_axi_master_adapter.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/core_to_axi_master_adapter.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module core_to_axi_master_adapter
+
+Top level modules:
+	core_to_axi_master_adapter
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/axi4lite_uart.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/axi4lite_uart.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module axi4lite_uart
+-- Importing package soc_pkg
+
+Top level modules:
+	axi4lite_uart
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/axi4lite_pwm.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/axi4lite_pwm.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module axi4lite_pwm
+-- Importing package soc_pkg
+
+Top level modules:
+	axi4lite_pwm
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv {2 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module axi4lite_interconnect
+-- Importing package soc_pkg
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(45): (vlog-13314) Defaulting port 's_awready' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(49): (vlog-13314) Defaulting port 's_wready' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(50): (vlog-13314) Defaulting port 's_bresp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(51): (vlog-13314) Defaulting port 's_bvalid' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(55): (vlog-13314) Defaulting port 's_arready' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(56): (vlog-13314) Defaulting port 's_rdata' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(57): (vlog-13314) Defaulting port 's_rresp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: F:/capstone_project/riscv-axi4lite-soc/axi4lite_interconnect.sv(58): (vlog-13314) Defaulting port 's_rvalid' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+
+Top level modules:
+	axi4lite_interconnect
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_uart.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_uart.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_uart
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_uart
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_pwm.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_pwm.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_pwm
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_pwm
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/axi4lite_dummy_slave.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/axi4lite_dummy_slave.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module axi4lite_dummy_slave
+-- Importing package soc_pkg
+
+Top level modules:
+	axi4lite_dummy_slave
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/instr_sram.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/instr_sram.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module instr_sram
+
+Top level modules:
+	instr_sram
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/axi4lite_gpio.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/axi4lite_gpio.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module axi4lite_gpio
+-- Importing package soc_pkg
+
+Top level modules:
+	axi4lite_gpio
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/alu.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/alu.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module alu
+-- Importing package soc_pkg
+
+Top level modules:
+	alu
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/load_store_unit.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/load_store_unit.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module load_store_unit
+
+Top level modules:
+	load_store_unit
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/decode_unit.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/decode_unit.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module decode_unit
+-- Importing package soc_pkg
+
+Top level modules:
+	decode_unit
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_gpio.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_gpio.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_gpio
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_gpio
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/rv32i_core.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/rv32i_core.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module rv32i_core
+-- Importing package soc_pkg
+
+Top level modules:
+	rv32i_core
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/regfile.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/regfile.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module regfile
+
+Top level modules:
+	regfile
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/cpu_bus_if.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/cpu_bus_if.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling interface cpu_bus_if
+
+Top level modules:
+	--none--
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_alu.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_alu.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_alu
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_alu
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/soc_top.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/soc_top.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module soc_top
+-- Importing package soc_pkg
+
+Top level modules:
+	soc_top
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/data_bus_decoder.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/data_bus_decoder.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module data_bus_decoder
+-- Importing package soc_pkg
+
+Top level modules:
+	data_bus_decoder
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/control_unit.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/control_unit.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module control_unit
+-- Importing package soc_pkg
+
+Top level modules:
+	control_unit
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_soc_invalid_access.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_soc_invalid_access.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_soc_invalid_access
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_soc_invalid_access
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_decode.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_decode.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_decode
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_decode
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_soc_gpio_integration.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_soc_gpio_integration.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_soc_gpio_integration
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_soc_gpio_integration
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_regfile.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_regfile.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_regfile
+
+Top level modules:
+	tb_regfile
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_axi_path.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_axi_path.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_axi_path
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_axi_path
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_soc_top.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_soc_top.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_soc_top
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_soc_top
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/data_sram.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/data_sram.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module data_sram
+
+Top level modules:
+	data_sram
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/axi4lite_timer.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/axi4lite_timer.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module axi4lite_timer
+-- Importing package soc_pkg
+
+Top level modules:
+	axi4lite_timer
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_timer.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_timer.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_timer
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_timer
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/tb_control.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/tb_control.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling module tb_control
+-- Importing package soc_pkg
+
+Top level modules:
+	tb_control
+
+} {} {}} F:/capstone_project/riscv-axi4lite-soc/soc_pkg.sv {1 {vlog -work work -vopt -sv -stats=none F:/capstone_project/riscv-axi4lite-soc/soc_pkg.sv
+QuestaSim-64 vlog 2024.1 Compiler 2024.02 Feb  1 2024
+-- Compiling package soc_pkg
+
+Top level modules:
+	--none--
+
+} {} {}}

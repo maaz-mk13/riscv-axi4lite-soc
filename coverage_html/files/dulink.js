@@ -1,0 +1,2 @@
+var g_data = {"8":["work.axi4lite_gpio",61.66,1],"7":["work.axi4lite_interconnect",91.31,1],"10":["work.axi4lite_pwm",50.87,1],"9":["work.axi4lite_timer",51.28,1],"11":["work.axi4lite_uart",30.31,1],"3":["work.axi_test_pkg",100.00,1],"6":["work.core_to_axi_master_adapter",72.06,1]};
+processDuLinks(g_data);

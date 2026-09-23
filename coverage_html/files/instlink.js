@@ -1,0 +1,2 @@
+var g_data = {"14":[12,"u_adapter",1],"15":[12,"u_interconnect",1],"16":[12,"u_gpio",1],"17":[12,"u_timer",1],"18":[12,"u_pwm",1],"19":[12,"u_uart",1],"12":[-1,"tb_uvm_top",1],"21":[-1,"axi_test_pkg",1]};
+processInstLinks(g_data);

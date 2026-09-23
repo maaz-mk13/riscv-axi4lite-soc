@@ -7,6 +7,7 @@ class axi_env extends uvm_env;
 
     axi_agent      agent;
     axi_scoreboard scoreboard;
+    axi_coverage   coverage;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
@@ -16,10 +17,12 @@ class axi_env extends uvm_env;
         super.build_phase(phase);
         agent      = axi_agent::type_id::create("agent", this);
         scoreboard = axi_scoreboard::type_id::create("scoreboard", this);
+        coverage   = axi_coverage::type_id::create("coverage", this);
     endfunction
 
     function void connect_phase(uvm_phase phase);
         agent.monitor.ap.connect(scoreboard.analysis_export);
+        agent.monitor.ap.connect(coverage.analysis_export);
     endfunction
 
 endclass : axi_env
