@@ -53,7 +53,27 @@ module tb_gpio;
         bready  = 1'b0;
         @(posedge clk);                   // guaranteed idle cycle -- DUT fully settles to IDLE
     endtask
+task automatic axi_write_strb(
+    input [31:0] addr,
+    input [31:0] data,
+    input [3:0] strb
+);
+    awaddr  = addr;
+    wdata   = data;
+    wstrb   = strb;
+    awvalid = 1'b1;
+    wvalid  = 1'b1;
+    bready  = 1'b1;
 
+    @(posedge clk);
+    while (!bvalid) @(posedge clk);
+
+    awvalid = 1'b0;
+    wvalid  = 1'b0;
+    bready  = 1'b0;
+
+    @(posedge clk);
+endtask
     task automatic axi_read(input [31:0] addr, output [31:0] data, output [1:0] resp);
         araddr  = addr;
         arvalid = 1'b1;
@@ -132,7 +152,120 @@ module tb_gpio;
                 errors++;
             end else $display("PASS GPIO_STATUS = 0");
         end
+// ---- GPIO byte-enable condition coverage ----
 
+// DATA_OUT: exercise each WSTRB bit separately
+axi_write_strb(GPIO_BASE + GPIO_DATA_OUT, 32'h0000_0011, 4'b0001);
+axi_write_strb(GPIO_BASE + GPIO_DATA_OUT, 32'h0000_2200, 4'b0010);
+axi_write_strb(GPIO_BASE + GPIO_DATA_OUT, 32'h0033_0000, 4'b0100);
+axi_write_strb(GPIO_BASE + GPIO_DATA_OUT, 32'h4400_0000, 4'b1000);
+
+// DIR: exercise each WSTRB bit separately
+axi_write_strb(GPIO_BASE + GPIO_DIR, 32'h0000_0011, 4'b0001);
+axi_write_strb(GPIO_BASE + GPIO_DIR, 32'h0000_2200, 4'b0010);
+axi_write_strb(GPIO_BASE + GPIO_DIR, 32'h0033_0000, 4'b0100);
+axi_write_strb(GPIO_BASE + GPIO_DIR, 32'h4400_0000, 4'b1000);
+// ---- GPIO WSTRB FALSE + MIXED COVERAGE ----
+
+axi_write_strb(GPIO_BASE + GPIO_DATA_OUT,
+               32'hFFFF_FFFF, 4'b0000);
+
+axi_write_strb(GPIO_BASE + GPIO_DIR,
+               32'hFFFF_FFFF, 4'b0000);
+
+axi_write_strb(GPIO_BASE + GPIO_DATA_OUT,
+               32'hAABB_CCDD, 4'b0011);
+
+axi_write_strb(GPIO_BASE + GPIO_DATA_OUT,
+               32'hAABB_CCDD, 4'b1100);
+
+axi_write_strb(GPIO_BASE + GPIO_DIR,
+               32'hAABB_CCDD, 4'b0011);
+
+axi_write_strb(GPIO_BASE + GPIO_DIR,
+               32'hAABB_CCDD, 4'b1100);
+// ============================================================
+// GPIO AXI CONDITION COVERAGE
+// ============================================================
+
+// ------------------------------------------------------------
+// WRITE: awvalid / wvalid combinations
+// ------------------------------------------------------------
+
+// AWVALID = 1, WVALID = 0
+awaddr  = GPIO_BASE + GPIO_DATA_OUT;
+wdata   = 32'h0000_0055;
+wstrb   = 4'b1111;
+awvalid = 1'b1;
+wvalid  = 1'b0;
+bready  = 1'b0;
+@(posedge clk);
+awvalid = 1'b0;
+
+// WVALID = 1, AWVALID = 0
+awvalid = 1'b0;
+wvalid  = 1'b1;
+@(posedge clk);
+wvalid = 1'b0;
+
+// Normal write: both = 1
+axi_write(GPIO_BASE + GPIO_DATA_OUT, 32'h0000_00AA);
+
+// ------------------------------------------------------------
+// WRITE RESPONSE: bready = 0 then 1
+// ------------------------------------------------------------
+
+awaddr  = GPIO_BASE + GPIO_DIR;
+wdata   = 32'h0000_0055;
+wstrb   = 4'b1111;
+awvalid = 1'b1;
+wvalid  = 1'b1;
+bready  = 1'b0;
+
+@(posedge clk);
+
+// Write should now be in W_RESP
+awvalid = 1'b0;
+wvalid  = 1'b0;
+
+repeat (2) @(posedge clk);
+
+// Now accept response
+bready = 1'b1;
+@(posedge clk);
+bready = 1'b0;
+
+@(posedge clk);
+
+// ------------------------------------------------------------
+// READ: arvalid = 0 then 1
+// ------------------------------------------------------------
+
+// arvalid = 0
+araddr  = GPIO_BASE + GPIO_DATA_OUT;
+arvalid = 1'b0;
+rready  = 1'b0;
+@(posedge clk);
+
+// arvalid = 1
+arvalid = 1'b1;
+rready  = 1'b0;
+@(posedge clk);
+
+// ------------------------------------------------------------
+// READ RESPONSE: rready = 0 then 1
+// ------------------------------------------------------------
+
+arvalid = 1'b0;
+
+repeat (2) @(posedge clk);
+
+// Accept read response
+rready = 1'b1;
+@(posedge clk);
+
+rready = 1'b0;
+@(posedge clk);
         if (errors == 0) begin
             $display("=== TB_GPIO: ALL TESTS PASSED ===");
         end else begin

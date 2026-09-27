@@ -51,7 +51,57 @@ module tb_pwm;
         arvalid = 1'b0; rready = 1'b0;
         @(posedge clk);
     endtask
+task automatic axi_write_strb(
+    input [31:0] addr,
+    input [31:0] data,
+    input [3:0]  strb
+);
+    awaddr = addr;
+    wdata  = data;
+    wstrb  = strb;
 
+    awvalid = 1'b1;
+    wvalid  = 1'b1;
+    bready  = 1'b1;
+
+    @(posedge clk);
+    while (!bvalid) @(posedge clk);
+
+    awvalid = 1'b0;
+    wvalid  = 1'b0;
+    bready  = 1'b0;
+
+    @(posedge clk);
+endtask
+
+
+task automatic axi_write_aw_first(
+    input [31:0] addr,
+    input [31:0] data
+);
+    awaddr = addr;
+    wdata  = data;
+    wstrb  = 4'b1111;
+
+    // AW channel first
+    awvalid = 1'b1;
+    wvalid  = 1'b0;
+    bready  = 1'b1;
+
+    @(posedge clk);
+
+    // W channel one cycle later
+    wvalid = 1'b1;
+
+    @(posedge clk);
+    while (!bvalid) @(posedge clk);
+
+    awvalid = 1'b0;
+    wvalid  = 1'b0;
+    bready  = 1'b0;
+
+    @(posedge clk);
+endtask
     // Counts high cycles of pwm_out over `num_cycles` consecutive clock
     // periods, starting from the next posedge.
     task automatic count_high_cycles(input int num_cycles, output int high_count);
@@ -143,12 +193,87 @@ module tb_pwm;
                 errors++;
             end else $display("PASS PWM_STATUS matches pwm_out (%b)", rd[0]);
         end
+        // ============================================================
+        // EXTRA TOGGLE-COVERAGE TESTS
+        // ============================================================
+
+        // 1. Toggle all 32 bits of CTRL register
+        axi_write(PWM_BASE + PWM_CTRL, 32'hFFFF_FFFF);
+        axi_write(PWM_BASE + PWM_CTRL, 32'h0000_0000);
+
+        // 2. Toggle all 32 bits of PERIOD register
+        axi_write(PWM_BASE + PWM_PERIOD, 32'hFFFF_FFFF);
+        axi_write(PWM_BASE + PWM_PERIOD, 32'h0000_0000);
+
+        // 3. Toggle all 32 bits of DUTY register
+        axi_write(PWM_BASE + PWM_DUTY, 32'hFFFF_FFFF);
+        axi_write(PWM_BASE + PWM_DUTY, 32'h0000_0000);
+
+        // 4. Exercise every individual byte strobe
+        axi_write_strb(PWM_BASE + PWM_CTRL,   32'h0000_00AA, 4'b0001);
+        axi_write_strb(PWM_BASE + PWM_CTRL,   32'h0000_BB00, 4'b0010);
+        axi_write_strb(PWM_BASE + PWM_CTRL,   32'h00CC_0000, 4'b0100);
+        axi_write_strb(PWM_BASE + PWM_CTRL,   32'hDD00_0000, 4'b1000);
+
+        axi_write_strb(PWM_BASE + PWM_PERIOD, 32'h0000_00AA, 4'b0001);
+        axi_write_strb(PWM_BASE + PWM_PERIOD, 32'h0000_BB00, 4'b0010);
+        axi_write_strb(PWM_BASE + PWM_PERIOD, 32'h00CC_0000, 4'b0100);
+        axi_write_strb(PWM_BASE + PWM_PERIOD, 32'hDD00_0000, 4'b1000);
+
+        axi_write_strb(PWM_BASE + PWM_DUTY,   32'h0000_00AA, 4'b0001);
+        axi_write_strb(PWM_BASE + PWM_DUTY,   32'h0000_BB00, 4'b0010);
+        axi_write_strb(PWM_BASE + PWM_DUTY,   32'h00CC_0000, 4'b0100);
+        axi_write_strb(PWM_BASE + PWM_DUTY,   32'hDD00_0000, 4'b1000);
+
+        // 5. Read every implemented register
+        begin
+            automatic logic [31:0] rd;
+
+            axi_read(PWM_BASE + PWM_CTRL,   rd);
+            axi_read(PWM_BASE + PWM_PERIOD, rd);
+            axi_read(PWM_BASE + PWM_DUTY,   rd);
+            axi_read(PWM_BASE + PWM_STATUS, rd);
+
+            // Unmapped read -> default read_data = 0
+            axi_read(PWM_BASE + 32'h10, rd);
+        end
+
+        // 6. AWVALID and WVALID independent timing
+        axi_write_aw_first(PWM_BASE + PWM_CTRL, 32'h0000_0001);
+
+        // 7. Give counter larger values so additional counter bits toggle
+        axi_write(PWM_BASE + PWM_PERIOD, 32'd256);
+        axi_write(PWM_BASE + PWM_DUTY,   32'd128);
+        axi_write(PWM_BASE + PWM_CTRL,   32'h0000_0001);
+
+        repeat (300) @(posedge clk);
+
+        // Disable again
+        axi_write(PWM_BASE + PWM_CTRL, 32'h0000_0000);
 
         if (errors == 0) begin
             $display("=== TB_PWM: ALL TESTS PASSED ===");
         end else begin
             $display("=== TB_PWM: %0d ERROR(S) ===", errors);
         end
+// Extra coverage stimulus
+axi_write(PWM_BASE + PWM_PERIOD, 32'h0000_0001);
+axi_write(PWM_BASE + PWM_DUTY,   32'h0000_0000);
+repeat (10) @(posedge clk);
+
+axi_write(PWM_BASE + PWM_PERIOD, 32'h0000_000A);
+axi_write(PWM_BASE + PWM_DUTY,   32'h0000_0005);
+repeat (20) @(posedge clk);
+
+axi_write(PWM_BASE + PWM_PERIOD, 32'h0000_00FF);
+axi_write(PWM_BASE + PWM_DUTY,   32'h0000_0080);
+repeat (20) @(posedge clk);
+
+axi_write(PWM_BASE + PWM_DUTY,   32'h0000_00FF);
+repeat (20) @(posedge clk);
+
+axi_write(PWM_BASE + PWM_DUTY,   32'h0000_0001);
+repeat (20) @(posedge clk);
 
         $finish;
     end

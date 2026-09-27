@@ -41,7 +41,28 @@ module tb_timer;
         awvalid = 1'b0; wvalid = 1'b0; bready = 1'b0;
         @(posedge clk);
     endtask
+task automatic axi_write_strb(
+    input [31:0] addr,
+    input [31:0] data,
+    input [3:0]  strb
+);
+    awaddr = addr;
+    wdata  = data;
+    wstrb  = strb;
 
+    awvalid = 1'b1;
+    wvalid  = 1'b1;
+    bready  = 1'b1;
+
+    @(posedge clk);
+    while (!bvalid) @(posedge clk);
+
+    awvalid = 1'b0;
+    wvalid  = 1'b0;
+    bready  = 1'b0;
+
+    @(posedge clk);
+endtask
     task automatic axi_read(input [31:0] addr, output [31:0] data);
         araddr = addr; arvalid = 1'b1; rready = 1'b1;
         @(posedge clk);
@@ -68,7 +89,22 @@ module tb_timer;
                 errors++;
             end else $display("PASS reset COUNT = 0");
         end
+        // ---- Test 1B: control register disabled/readback ----
+        begin
+            automatic logic [31:0] rd;
 
+            axi_write(TIMER_BASE + TIMER_CTRL, 32'h0000_0000);
+            axi_read(TIMER_BASE + TIMER_CTRL, rd);
+
+            if (rd !== 32'h0000_0000) begin
+                $error("FAIL CTRL readback: expected 0 got %h", rd);
+                errors++;
+            end else begin
+                $display("PASS CTRL disabled readback = 0");
+            end
+        end
+        // ---- Test 1C: partial byte write ----
+        axi_write_strb(TIMER_BASE + TIMER_CTRL, 32'h0000_0000, 4'b0001);
         // ---- Test 2: one-shot mode counts down and expires ----
         axi_write(TIMER_BASE + TIMER_LOAD, 32'd10);
         axi_write(TIMER_BASE + TIMER_CTRL, 32'h0000_0001);  // enable=1, mode=0 (one-shot)
@@ -136,6 +172,87 @@ module tb_timer;
                 errors++;
             end else $display("PASS periodic STATUS expired=1 after wraparound");
         end
+// ============================================================
+// TIMER CONDITION COVERAGE
+// ============================================================
+
+// Hit all WSTRB true/false combinations on TIMER_LOAD
+axi_write_strb(TIMER_BASE + TIMER_LOAD, 32'h00000011, 4'b0001);
+axi_write_strb(TIMER_BASE + TIMER_LOAD, 32'h00002200, 4'b0010);
+axi_write_strb(TIMER_BASE + TIMER_LOAD, 32'h00330000, 4'b0100);
+axi_write_strb(TIMER_BASE + TIMER_LOAD, 32'h44000000, 4'b1000);
+
+// Hit combinations with multiple byte enables
+axi_write_strb(TIMER_BASE + TIMER_LOAD, 32'hAABBCCDD, 4'b0011);
+axi_write_strb(TIMER_BASE + TIMER_LOAD, 32'hAABBCCDD, 4'b1100);
+axi_write_strb(TIMER_BASE + TIMER_LOAD, 32'hAABBCCDD, 4'b1010);
+
+// LOAD = 0 -> enable rising -> expired immediately
+axi_write(TIMER_BASE + TIMER_CTRL, 32'h00000000);
+axi_write(TIMER_BASE + TIMER_LOAD, 32'h00000000);
+axi_write(TIMER_BASE + TIMER_CTRL, 32'h00000001);
+repeat (2) @(posedge clk);
+
+// Clear expired flag: wstrb[0] = 1 and wdata[0] = 1
+axi_write_strb(TIMER_BASE + TIMER_STATUS,
+               32'h00000001, 4'b0001);
+
+// LOAD = 2 -> exercise count == 1 and count == 0
+axi_write(TIMER_BASE + TIMER_CTRL, 32'h00000000);
+axi_write(TIMER_BASE + TIMER_LOAD, 32'h00000002);
+axi_write(TIMER_BASE + TIMER_CTRL, 32'h00000001);
+repeat (3) @(posedge clk);
+
+// Disable
+axi_write(TIMER_BASE + TIMER_CTRL, 32'h00000000);
+
+// Periodic mode -> exercise periodic true
+axi_write(TIMER_BASE + TIMER_LOAD, 32'h00000002);
+axi_write(TIMER_BASE + TIMER_CTRL, 32'h00000003);
+repeat (6) @(posedge clk);
+
+// Clear status again
+axi_write_strb(TIMER_BASE + TIMER_STATUS,
+               32'h00000001, 4'b0001);
+
+// Invalid write -> default case
+axi_write(TIMER_BASE + 32'h10, 32'hDEADBEEF);
+// RW1C condition combinations
+axi_write_strb(TIMER_BASE + TIMER_STATUS,
+               32'h00000000, 4'b0001);
+
+axi_write_strb(TIMER_BASE + TIMER_STATUS,
+               32'h00000001, 4'b0000);
+
+axi_write_strb(TIMER_BASE + TIMER_STATUS,
+               32'h00000001, 4'b0001);
+
+axi_write_strb(TIMER_BASE + TIMER_STATUS,
+               32'h00000000, 4'b1111);
+// =====================================================
+// TIMER WRITE HANDSHAKE: AWVALID=1, WVALID=0
+// =====================================================
+awaddr  = TIMER_BASE + TIMER_CTRL;
+wdata   = 32'h0000_0001;
+wstrb   = 4'b1111;
+
+awvalid = 1'b1;
+wvalid  = 1'b0;
+bready  = 1'b0;
+
+@(posedge clk);
+
+awvalid = 1'b0;
+wvalid  = 1'b1;
+
+@(posedge clk);
+
+wvalid = 1'b0;
+bready  = 1'b1;
+
+repeat (2) @(posedge clk);
+
+bready = 1'b0;
 
         if (errors == 0) begin
             $display("=== TB_TIMER: ALL TESTS PASSED ===");

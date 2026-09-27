@@ -17,7 +17,7 @@ module tb_uart;
     logic rst;
     always #5 clk = ~clk;
 
-    logic [31:0] awaddr, wdata, araddr, rdata;
+    logic [31:0] awaddr, wdata, araddr, read_data, rdata;
     logic [3:0]  wstrb;
     logic [1:0]  bresp, rresp;
     logic        awvalid, awready, wvalid, wready, bvalid, bready;
@@ -198,13 +198,212 @@ module tb_uart;
                 $error("FAIL rx_valid after RXDATA read: expected 0 got %b", rd[1]);
                 errors++;
             end else $display("PASS rx_valid cleared to 0 after reading RXDATA");
+
         end
+drive_rx_byte(8'hFF);
+repeat (10) @(posedge clk);
+
+drive_rx_byte(8'h55);
+repeat (10) @(posedge clk);
+
+drive_rx_byte(8'hAA);
+repeat (10) @(posedge clk);
+
+drive_rx_byte(8'hF0);
+repeat (10) @(posedge clk);
+
+drive_rx_byte(8'h0F);
+repeat (10) @(posedge clk);
+// ============================================================
+// Coverage Improvement Tests
+// ============================================================
+
+// 1. Different baud_div values
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0001);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0002);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0004);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0008);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0010);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0020);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0040);
+
+// 2. TX different data patterns
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0004);
+
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_0000);
+repeat (48) @(posedge clk);
+
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_00FF);
+repeat (48) @(posedge clk);
+
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_0055);
+repeat (48) @(posedge clk);
+
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_00AA);
+repeat (48) @(posedge clk);
+
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_00F0);
+repeat (48) @(posedge clk);
+
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_000F);
+repeat (48) @(posedge clk);
+
+// 3. RX different bytes
+drive_rx_byte(8'h00);
+repeat (10) @(posedge clk);
+
+drive_rx_byte(8'hFF);
+repeat (10) @(posedge clk);
+
+drive_rx_byte(8'h55);
+repeat (10) @(posedge clk);
+
+drive_rx_byte(8'hAA);
+repeat (10) @(posedge clk);
+
+// 4. Read RXDATA after RX activity
+axi_read(UART_BASE + UART_RXDATA, read_data);
+axi_read(UART_BASE + UART_STATUS, read_data);
+// Test 5: baud_div = 0
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0000);
+repeat (5) @(posedge clk);
+
+// Test 6: different baud_div values
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0001);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0002);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0004);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0008);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0010);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0020);
+// ---- Extra TX patterns for toggle coverage ----
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0004);
+
+// TX 0x00
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_0000);
+repeat (48) @(posedge clk);
+
+// TX 0xFF
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_00FF);
+repeat (48) @(posedge clk);
+
+// TX 0x55
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_0055);
+repeat (48) @(posedge clk);
+
+// TX 0xAA
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_00AA);
+repeat (48) @(posedge clk);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0002);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0008);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0010);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0020);
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0001);
+repeat (5) @(posedge clk);
+
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0002);
+repeat (5) @(posedge clk);
+
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0004);
+repeat (5) @(posedge clk);
+
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0008);
+repeat (5) @(posedge clk);
+
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0010);
+repeat (5) @(posedge clk);
+
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0020);
+repeat (5) @(posedge clk);
+
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0040);
+repeat (5) @(posedge clk);
+// ============================================================
+// UART CONDITION + FSM COVERAGE
+// ============================================================
+
+// ------------------------------------------------------------
+// 1. WRITE condition: awvalid=1, wvalid=0
+// ------------------------------------------------------------
+awaddr  = UART_BASE + UART_CTRL;
+wdata   = 32'h0000_0001;
+wstrb   = 4'b1111;
+awvalid = 1'b1;
+wvalid  = 1'b0;
+bready  = 1'b0;
+
+@(posedge clk);
+
+awvalid = 1'b0;
+wvalid  = 1'b1;
+
+@(posedge clk);
+
+wvalid = 1'b0;
+bready  = 1'b1;
+
+repeat (2) @(posedge clk);
+bready = 1'b0;
+
+// ------------------------------------------------------------
+// 2. TX_START -> TX_IDLE
+//    Start TX, then disable UART before TX completes
+// ------------------------------------------------------------
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0001);
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_0055);
+
+// Abort TX early
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0000);
+
+repeat (3) @(posedge clk);
+
+// ------------------------------------------------------------
+// 3. TX_DATA -> TX_IDLE
+//    Start TX, wait until DATA state, then disable
+// ------------------------------------------------------------
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0001);
+axi_write(UART_BASE + UART_TXDATA, 32'h0000_00AA);
+
+repeat (2) @(posedge clk);
+
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0000);
+
+repeat (3) @(posedge clk);
+
+// ------------------------------------------------------------
+// 4. RX baud_div == 0 condition
+// ------------------------------------------------------------
+axi_write(UART_BASE + UART_CTRL, 32'h0000_0000);
+
+// Keep RX idle while baud_div is zero
+uart_rx = 1'b1;
+repeat (5) @(posedge clk);
+
+// RX_START -> RX_IDLE
+uart_rx = 1'b0;
+@(posedge clk);
+uart_rx = 1'b1;
+
+repeat (2) @(posedge clk);
+
+// ------------------------------------------------------------
+// 5. RX_DATA -> RX_IDLE
+//    Force an invalid/aborted RX frame
+// ------------------------------------------------------------
+uart_rx = 1'b0;
+repeat (2) @(posedge clk);
+
+// Return RX high before complete frame
+uart_rx = 1'b1;
+
+repeat (5) @(posedge clk);
 
         if (errors == 0) begin
             $display("=== TB_UART: ALL TESTS PASSED ===");
         end else begin
             $display("=== TB_UART: %0d ERROR(S) ===", errors);
         end
+
+
 
         $finish;
     end

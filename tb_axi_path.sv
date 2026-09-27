@@ -179,7 +179,75 @@ module tb_axi_path;
                 $display("PASS unmapped read correctly returned SLVERR (no hang)");
             end
         end
+// ---- Test 3: delayed invalid write response ----
+begin
+    @(negedge clk);
+    cpu_addr  = 32'h2000_0000;
+    cpu_wdata = 32'h1234_5678;
+    cpu_wstrb = 4'b1111;
+    cpu_valid = 1'b1;
 
+    // Keep CPU request active while interconnect enters WR_RESP
+    @(posedge clk);
+    @(posedge clk);
+
+    // Hold request until adapter receives response
+    wait (cpu_ready === 1'b1);
+
+    @(negedge clk);
+    cpu_valid = 1'b0;
+end
+
+// ---- Test 4: delayed invalid read response ----
+begin
+    @(negedge clk);
+    cpu_addr  = 32'h3000_0000;
+    cpu_wdata = 32'h0;
+    cpu_wstrb = 4'b0000;
+    cpu_valid = 1'b1;
+
+    // Keep request active while interconnect enters RD_RESP
+    @(posedge clk);
+    @(posedge clk);
+
+    wait (cpu_ready === 1'b1);
+
+    @(negedge clk);
+    cpu_valid = 1'b0;
+end
+// ---- Extra: keep invalid write request active ----
+begin
+    @(negedge clk);
+
+    cpu_addr  = 32'h2000_0000;
+    cpu_wdata = 32'hAAAA_AAAA;
+    cpu_wstrb = 4'b1111;
+    cpu_valid = 1'b1;
+
+    // Hold request for several cycles
+    repeat (5) @(posedge clk);
+
+    // Release only after response path has been exercised
+    cpu_valid = 1'b0;
+
+    @(posedge clk);
+end
+
+// ---- Extra: keep invalid read request active ----
+begin
+    @(negedge clk);
+
+    cpu_addr  = 32'h3000_0000;
+    cpu_wdata = 32'h0000_0000;
+    cpu_wstrb = 4'b0000;
+    cpu_valid = 1'b1;
+
+    repeat (5) @(posedge clk);
+
+    cpu_valid = 1'b0;
+
+    @(posedge clk);
+end
         if (errors == 0) begin
             $display("=== TB_AXI_PATH: ALL TESTS PASSED ===");
         end else begin
